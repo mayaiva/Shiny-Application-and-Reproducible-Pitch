@@ -1,41 +1,31 @@
-
-# This is the server logic for a Shiny web application.
-# You can find out more about building applications with Shiny here:
-#
-# http://shiny.rstudio.com
-#
-
 library(shiny)
 
-# Define server logic for random distribution application
 shinyServer(function(input, output) {
         
-       
-        data <- reactive({  
-                dist <- switch(input$dist,
-                               norm = rnorm,
-                               unif = runif,
-                               rnorm)
-                
-                dist(input$n)
+        values <- reactiveValues()
+        # Calculate the interest and amount    
+        observe({
+                input$action_Calc
+                values$int <- isolate({
+                        input$num_principal * input$slider_intrate/100 *
+                                input$slider_num  
+                })
+                values$amt <- isolate(input$num_principal) + values$int
+                })
+        
+        
+        # Show calculated values
+        
+        output$text_int <- renderText({
+                if(input$action_Calc == 0) ""
+                else
+                        paste("Simple Interest,$:", values$int)
         })
         
-        # Generate a plot of the data. 
-        output$plot <- renderPlot({
-                dist <- input$dist
-                n <- input$n
-                
-                hist(data(), 
-                     main=paste('r', dist, '(', n, ')', sep=''))
+        output$text_amt <- renderText({
+                if(input$action_Calc == 0) ""
+                else 
+                        paste("Total Amount (Principal plus Interest,$):", values$amt)
         })
         
-        # Generate a summary of the data
-        output$summary <- renderPrint({
-                summary(data())
-        })
-        
-        # Generate an HTML table view of the data
-        output$table <- renderTable({
-                data.frame(x=data())
-        })
 })
